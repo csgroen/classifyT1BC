@@ -5,7 +5,7 @@
 
 Installing requires R version 3.5 or higher and devtools.
     
-    if(!require(devtools)) install.packages("devtools)
+    if(!require(devtools)) install.packages("devtools")
     devtools::install_github("csgroen/classifyT1BC")
 
 ## Usage
