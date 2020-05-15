@@ -51,9 +51,24 @@ Missing genes:", paste(missing, collapse = ", "))
                           dimnames = list(missing, colnames(gexp)))
         gexp <- rbind(gexp, mss_mat)
     }
-
     #-- Rearrange
-    data <- gexp[feats,] %>% t()
+
+    #-- Convert feats to symbol
+    if (id_type != "symbol") {
+        gexp2 <- gexp %>%
+            as.data.frame() %>%
+            rownames_to_column("id") %>%
+            right_join(data, select(genes4classification, "symbol", id = !! id_type), by = "id") %>%
+            select(-id) %>%
+            column_to_rownames("symbol") %>%
+            as.matrix()
+
+    } else {
+        gexp2 <- gexp
+        }
+    data <- gexp[classification_features,] %>% t()
+
+
     #-- Make prediction
     pred_cls <- predict(t1BC_model, data)
     probs_cls <- predict(t1BC_model, data, type = "prob") %>%
