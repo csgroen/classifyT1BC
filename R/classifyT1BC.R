@@ -33,8 +33,9 @@ classifyT1BC <- function(gexp,
     #-- Check input data
     if(!any(class(gexp) %in% c("data.frame", "matrix"))) {
         stop("`gexp` must be a data.frame or matrix")
+    } else if (any(class(gexp) %in% c("data.frame"))) {
+        gexp <- as.matrix(gexp)
     }
-
     #-- Address missing
     missing <- feats[! feats %in% rownames(gexp)]
 
@@ -46,7 +47,7 @@ classifyT1BC <- function(gexp,
 Missing genes:", paste(missing, collapse = ", "))
             warning(msg)
         }
-        val <- suppressWarnings(mean(gexp[feats[feats %in% rownames(gexp)],]))
+        val <- mean(gexp[feats[feats %in% rownames(gexp)],], na.rm = TRUE)
         mss_mat <- matrix(val, nrow = length(missing), ncol = ncol(gexp),
                           dimnames = list(missing, colnames(gexp)))
         gexp <- rbind(gexp, mss_mat)
@@ -67,7 +68,6 @@ Missing genes:", paste(missing, collapse = ", "))
         gexp2 <- gexp
         }
     data <- gexp[classification_features,] %>% t()
-
 
     #-- Make prediction
     pred_cls <- predict(t1BC_model, data)
