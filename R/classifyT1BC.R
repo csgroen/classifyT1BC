@@ -46,7 +46,7 @@ classifyT1BC <- function(gexp,
 Missing genes:", paste(missing, collapse = ", "))
             warning(msg)
         }
-        val <- mean(gexp[feats[feats %in% rownames(gexp)],])
+        val <- suppressWarnings(mean(gexp[feats[feats %in% rownames(gexp)],]))
         mss_mat <- matrix(val, nrow = length(missing), ncol = ncol(gexp),
                           dimnames = list(missing, colnames(gexp)))
         gexp <- rbind(gexp, mss_mat)
