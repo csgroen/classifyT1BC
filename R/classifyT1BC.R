@@ -31,7 +31,7 @@ classifyT1BC <- function(gexp,
     feats <- genes4classification[,id_type]
 
     #-- Check input data
-    if(! class(gexp) %in% c("data.frame", "matrix")) {
+    if(!any(class(gexp) %in% c("data.frame", "matrix"))) {
         stop("`gexp` must be a data.frame or matrix")
     }
 
