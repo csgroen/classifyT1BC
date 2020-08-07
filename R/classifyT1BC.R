@@ -47,27 +47,25 @@ classifyT1BC <- function(gexp,
 Missing genes:", paste(missing, collapse = ", "))
             warning(msg)
         }
-        val <- mean(gexp[feats[feats %in% rownames(gexp)],], na.rm = TRUE)
+        present_feats <- feats[feats %in% rownames(gexp)]
+        val <- mean(gexp[present_feats,], na.rm = TRUE)
         mss_mat <- matrix(val, nrow = length(missing), ncol = ncol(gexp),
                           dimnames = list(missing, colnames(gexp)))
         gexp <- rbind(gexp, mss_mat)
     }
-    #-- Rearrange
-
     #-- Convert feats to symbol
     if (id_type != "symbol") {
         gexp2 <- gexp %>%
             as.data.frame() %>%
             rownames_to_column("id") %>%
-            right_join(data, select(genes4classification, "symbol", id = !! id_type), by = "id") %>%
+            right_join(select(genes4classification, "symbol", id = !! id_type), by = "id") %>%
             select(-id) %>%
             column_to_rownames("symbol") %>%
             as.matrix()
-
     } else {
         gexp2 <- gexp
         }
-    data <- gexp[classification_features,] %>% t()
+    data <- gexp2[classification_features,] %>% t()
 
     #-- Make prediction
     pred_cls <- predict(t1BC_model, data)
