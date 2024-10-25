@@ -11,6 +11,8 @@
 #' @param data_type a string, representing the type of data to be classified.
 #' Can be one of: "rnaseq" or "array". This will change the model used to
 #' predict the T1 classes.
+#' @param model_type a string, one of "sensitive" for most accurate but less
+#' robust model (`enet`) or "robust" for less accurate but more robust model (`knn`).
 #' @param min_cor a numeric between 0 and 1. Used only for `data_type = 'array'`.
 #' If sample correlation to the centroids of every class fall below this threshold,
 #' the sample will be unclassified.
@@ -37,6 +39,7 @@ classifyT1BC <- function(gexp,
                          id_type = c("symbol", "ensembl_id",
                                       "entrez_id")[1],
                          data_type = c("rnaseq", "array")[1],
+                         model_type = c("sensitive", "robust")[1],
                          min_cor = 0.3) {
     #-- Get features from genes4classification
     if(! id_type %in% c("symbol", "ensembl_id", "entrez_id")) {
@@ -92,10 +95,15 @@ Missing genes:", paste(missing, collapse = ", "))
         }
         data <- gexp2[classification_features,] %>% t()
 
-        #-- Make prediction
-        pred_cls <- predict(t1BC_model, data)
+        #-- Predict
+        if(model_type == "sensitive") {
+            pred_cls <- predict(t1BC_model, data)
+        } else {
+            pred_cls <- predict(t1BC_knn, data)
+        }
         probs_cls <- predict(t1BC_model, data, type = "prob") %>%
             rename_all(~ paste0("cl_", ., "_prob"))
+
         #-- Make return
         class_res <- cbind(class = pred_cls, probs_cls) %>%
             as.data.frame() %>%
