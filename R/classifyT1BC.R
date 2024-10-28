@@ -1,6 +1,6 @@
 #' Classify T1 bladder cancer samples
 #'
-#' This samples provides class calls and class probabilities given log-transformed
+#' This samples provides class calls and class probabilities given log2(TPM+1)
 #' normalized expression data. The expression data must be in the form of a
 #' matrix of data.frame, where rows are genes and columns are samples.
 #'
@@ -21,6 +21,7 @@
 #' If data_type = 'rnaseq':
 #' * `class_prob` shows the model probability for the assigned class
 #' * `cl_1_prob` to `cl_5_prob` contain the probabilities for each class
+#'
 #' If data_type = 'array':
 #' * `class_cor` shows the correlation of the sample to the centroid of the
 #' assigned class.
@@ -28,16 +29,17 @@
 #' centroid of each class
 #'
 #' @export
-#' @importFrom stats predict
+#' @import glmnet
 #' @importFrom magrittr `%>%`
 #' @importFrom dplyr rename_all mutate select case_when
 #' @importFrom tidyr everything
+#' @importFrom stringr str_replace_all
 #' @importFrom tibble rownames_to_column
 classifyT1BC <- function(gexp,
                          id_type = c("symbol", "ensembl_id",
                                       "entrez_id")[1],
                          data_type = c("rnaseq", "array")[1],
-                         min_cor = 0.3) {
+                         min_cor = 0.2) {
     #-- Get features from genes4classification
     if(! id_type %in% c("symbol", "ensembl_id", "entrez_id")) {
         stop("`id_type` must be one of 'symbol', 'ensembl_id' or 'entrez_id'.")
@@ -56,11 +58,12 @@ classifyT1BC <- function(gexp,
     } else if (any(class(gexp) %in% c("data.frame"))) {
         gexp <- as.matrix(gexp)
     }
+    # rownames(gexp) <- str_replace_all(rownames(gexp), "-", "_")
     #-- Address missing
     missing <- feats[! feats %in% rownames(gexp)]
     present_feats <- feats[feats %in% rownames(gexp)]
 
-    if(length(missing) >= 300) {
+    if(length(missing) == 300) {
         stop("We could not find compatible features in this dataset. Are you sure you used the correct `id_type`?")
     }
 
@@ -71,8 +74,10 @@ Missing genes:", paste(missing, collapse = ", "))
     }
 
     if(data_type == "rnaseq") {
+        message("Running `rnaseq` model...")
         #-- Impute missing
         if(length(missing) > 0) {
+            message("Missing genes will be imputed.")
             val <- mean(gexp[present_feats,], na.rm = TRUE)
             mss_mat <- matrix(val, nrow = length(missing), ncol = ncol(gexp),
                               dimnames = list(missing, colnames(gexp)))
@@ -93,13 +98,16 @@ Missing genes:", paste(missing, collapse = ", "))
         data <- gexp2[classification_features,] %>% t()
 
         #-- Make prediction
-        pred_cls <- predict(t1BC_model, data)
-        probs_cls <- predict(t1BC_model, data, type = "prob") %>%
-            rename_all(~ paste0("cl_", ., "_prob"))
+        # probs_cls <- predict(t1BC_model, data, type = "response") %>%
+        #     as.data.frame() %>%
+        #     rename_all(~ paste0("cl_", ., "_prob") |> str_remove("X"))
+        probs_cls <- predict(t1BC_model, data, type = "response") |>
+            as.data.frame() |>
+            rename_all(~ paste0("cl_", ., "_prob") |> str_remove("\\.s0"))
+        pred_cls <- factor(apply(probs_cls, 1, which.max))
         #-- Make return
-        class_res <- cbind(class = pred_cls, probs_cls) %>%
-            as.data.frame() %>%
-            rownames_to_column("id")
+        class_res <- cbind(id = rownames(data), class = pred_cls, probs_cls) %>%
+            as.data.frame()
 
         #-- Make assigned class_prob
         class_res <- class_res %>%
@@ -112,9 +120,9 @@ Missing genes:", paste(missing, collapse = ", "))
             )) %>%
             select(id, class, class_prob, everything())
     } else {
-        message("-- Using model to predict on array data (nearest shrunken centroid)...")
+        message("Running `array` model (nearest shrunken centroid)...")
         #-- Make centroid
-        cent_mat <- as.matrix(centroids[,1:5])
+        cent_mat <- as.matrix(centroids[,2:6])
         rownames(cent_mat) <- centroids[,id_type]
         colnames(cent_mat) <- as.character(1:5)
         cent_mat <- cent_mat[present_feats,]

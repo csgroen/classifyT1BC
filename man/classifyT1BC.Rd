@@ -4,24 +4,43 @@
 \alias{classifyT1BC}
 \title{Classify T1 bladder cancer samples}
 \usage{
-classifyT1BC(gexp, id_type = c("symbol", "ensembl_id", "entrez_id")[1])
+classifyT1BC(
+  gexp,
+  id_type = c("symbol", "ensembl_id", "entrez_id")[1],
+  data_type = c("rnaseq", "array")[1],
+  min_cor = 0.2
+)
 }
 \arguments{
 \item{gexp}{a matrix or data.frame with rows as genes and columns as samples.}
 
-\item{id_type}{type of gene annation used in the expression matrix. One of:
-"symbol", "ensembl_id" or "entrez_id" for HGNC symbol, ENSEMBL gene ID, and
-Entrez Gene ID, respectively.}
+\item{id_type}{a string, representing the type of gene annotation used in the
+expression matrix. One of: "symbol", "ensembl_id" or "entrez_id" for
+HGNC symbol, ENSEMBL gene ID, and Entrez Gene ID, respectively.}
+
+\item{data_type}{a string, representing the type of data to be classified.
+Can be one of: "rnaseq" or "array". This will change the model used to
+predict the T1 classes.}
+
+\item{min_cor}{a numeric between 0 and 1. Used only for `data_type = 'array'`.
+If sample correlation to the centroids of every class fall below this threshold,
+the sample will be unclassified.}
 }
 \value{
 A data.frame with `ncol(gexp)` rows and 8 columns:
 * `id` contains the colnames of the original expression matrix
 * `class` contains the class prediction for the sample
+If data_type = 'rnaseq':
 * `class_prob` shows the model probability for the assigned class
-* `cl_1_prob` to `cl_2_prob` contain the probabilities for each class
+* `cl_1_prob` to `cl_5_prob` contain the probabilities for each class
+If data_type = 'array':
+* `class_cor` shows the correlation of the sample to the centroid of the
+assigned class.
+* `cl_1_cor` to `cl_5_cor` contain the correlation of the sample to the
+centroid of each class
 }
 \description{
-This samples provides class calls and class probabilities given log-transformed
+This samples provides class calls and class probabilities given log2(TPM+1)
 normalized expression data. The expression data must be in the form of a
 matrix of data.frame, where rows are genes and columns are samples.
 }

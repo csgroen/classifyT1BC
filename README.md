@@ -9,7 +9,7 @@ Installing requires R version 3.5 or higher and devtools.
     devtools::install_github("csgroen/classifyT1BC")
 
 ## Usage
-The package consists of the `classifyT1BC` function. It requires as input a log-transformed, FPKM normalized RNA-seq gene expression matrix (i.e. log2(FPKM)). It supports HGNC Symbols, Ensembl Gene IDs and Entrez Gene IDs.
+The package consists of the `classifyT1BC` function. It requires as log2(TPM+1) normalized RNA-seq gene expression matrix. It supports HGNC Symbols, Ensembl Gene IDs and Entrez Gene IDs.
 
     class_results <- classifyT1BC(gexp, type_id = "symbol")
 
