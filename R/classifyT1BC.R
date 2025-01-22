@@ -93,7 +93,7 @@ Missing genes:", paste(missing, collapse = ", "))
         } else {
             gexp2 <- gexp
         }
-        data <- gexp2[feats,] %>% t()
+        data <- gexp2[classification_features,] %>% t()
 
         #-- Predict
         if(model_type == "sensitive") {
