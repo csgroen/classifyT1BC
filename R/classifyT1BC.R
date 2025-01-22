@@ -33,7 +33,7 @@
 #' @importFrom magrittr `%>%`
 #' @importFrom dplyr rename_all mutate select case_when
 #' @importFrom tidyr everything
-#' @importFrom stringr str_replace_all
+#' @importFrom stringr str_replace_all str_remove
 #' @importFrom tibble rownames_to_column
 classifyT1BC <- function(gexp,
                          id_type = c("symbol", "ensembl_id",

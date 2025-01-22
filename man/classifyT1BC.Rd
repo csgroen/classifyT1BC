@@ -33,6 +33,7 @@ A data.frame with `ncol(gexp)` rows and 8 columns:
 If data_type = 'rnaseq':
 * `class_prob` shows the model probability for the assigned class
 * `cl_1_prob` to `cl_5_prob` contain the probabilities for each class
+
 If data_type = 'array':
 * `class_cor` shows the correlation of the sample to the centroid of the
 assigned class.
